@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ORBIT Meetings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-box">O</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item">
+          <i data-lucide="home"></i>
+          <span>Home</span>
+        </a>
+        <a href="#" class="nav-item active">
+          <i data-lucide="calendar"></i>
+          <span>Meetings</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i data-lucide="users"></i>
+          <span>Directory</span>
+        </a>
+        <a href="#" class="nav-item">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="storage-card">
+          <div class="storage-label">STORAGE USED</div>
+          <div class="progress-bar">
+            <div class="progress" style="width: 80%"></div>
+          </div>
+          <div class="storage-info">12.5 GB of 15 GB Used</div>
+          <button class="upgrade-btn">Upgrade Plan</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Layout -->
+    <main class="main-layout">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left" id="topbar-title-container">
+          <h1 id="page-title" style="font-size: 18px; font-weight: 700;">Meetings</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="search-container">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" placeholder="Search meetings..." class="search-input">
+          </div>
+          <button class="icon-btn"><i data-lucide="bell"></i></button>
+          <div class="user-avatar">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nishita" alt="User">
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div id="content-area" class="content-area">
+        <!-- Dynamically Rendered Content -->
+      </div>
+    </main>
+
+    <!-- Schedule Modal Overlay -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+      <!-- Modal Content -->
+    </div>
+
+    <!-- Hover Preview Card -->
+    <div id="hover-preview" class="hover-preview hidden"></div>
+  </div>
+  <script type="module" src="/main.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>
