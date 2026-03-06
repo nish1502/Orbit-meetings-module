@@ -1,152 +1,141 @@
-# Orbit Meetings Module: Developer Specification
+# Orbit Meetings Module: Developer Specification (Google Meet Integration)
 
 ## 1. Module Overview
-The Meetings module is a central hub within the ORBIT application designed to streamline professional scheduling, real-time collaboration, and AI-driven post-meeting analysis. It solves the fragmentation between calendar management and actual meeting execution by providing a unified interface for scheduling, attending, and reviewing meetings.
+The Meetings Module is a central hub within the ORBIT application designed to streamline professional scheduling and calendar management. It provides a unified interface for scheduling, attending, and reviewing meetings.
+
+**Strategic Architecture:**
+Orbit **does NOT host its own meeting room**. Instead, it serves as the scheduling and data layer that integrates with **Google Meet**. When a meeting is live, users are redirected to an external Google Meet tab.
 
 **Key Capabilities:**
-*   **Unified Dashboard:** Dual-pane view with upcoming meeting lists and interactive calendars.
-*   **Flexible Scheduling:** High-detail modal for creating meetings with project associations.
-*   **Interactive Calendars:** Day, Week, and Month views with drag-to-schedule support.
-*   **Meeting Room:** Integrated video conferencing with live transcription.
-*   **AI Intelligence:** Automated generation of summaries, action items, and insights.
+*   **Scheduling:** Create and manage sessions with automated Google Meet link generation.
+*   **Calendar Views:** Interactive Day, Week, and Month grids.
+*   **Meeting Repository:** Detailed views for specific meeting instances, participants, and notes.
+*   **Redirection Logic:** Deep-linking to Google Meet for live sessions.
+*   **AI Intelligence:** Display of post-meeting summaries and action items.
 
 ---
 
 ## 2. Key Features
 Developers must implement the following core components:
-*   **Meetings Dashboard:** Main landing page with upcoming list and calendar grid.
-*   **Calendar Views:** Support for Day, Week (default), and Month layouts.
-*   **Schedule Meeting Modal:** Input form for meeting metadata and attendee invitation.
-*   **Meeting Details Page:** Informational hub for specific meeting instances.
-*   **Join Meeting Logic:** State-aware buttons (Live/Scheduled/Ended).
-*   **Participant Management:** Avatar stacks and role-based metadata.
-*   **Role-Based Permissions:** Host-only administrative actions.
-*   **Advanced Filtering:** Multi-criteria filtering for status, ownership, and type.
-*   **Meeting Room Interface:** Video grid, media controls, and live sidebar.
-*   **AI Insights Engine:** Post-meeting summary and action item rendering.
+*   **Meetings Dashboard:** Side-by-side view of upcoming lists and calendar grids.
+*   **Day / Week / Month Views:** Responsive calendar layouts with view-switching.
+*   **Schedule Meeting:** Modal form to create meetings and generate Meet links.
+*   **Meeting Details Page:** Centralized hub for meeting-specific metadata.
+*   **Google Meet Redirection:** "Join" buttons that trigger `window.open` to external Meet URLs.
+*   **Participant Management:** Role-based attendee lists with avatar support.
+*   **Role-Based Permissions:** Administrative restrictions for Host vs. Participant.
+*   **Meeting Filters:** Real-time filtering by status, participation, and type.
+*   **AI Meeting Insights:** Interface for viewing summaries and checklists.
 
 ---
 
 ## 3. User Roles & Permissions
-| Feature | Host | Participant |
-| :--- | :---: | :---: |
-| Schedule Meeting | ✅ | ❌ |
-| Edit Meeting Details | ✅ | ❌ |
-| Delete Meeting | ✅ | ❌ |
-| Join Live Meeting | ✅ | ✅ |
-| Access AI Insights | ✅ | ✅ |
-| View Meeting Notes | ✅ | ✅ |
-| Invite New Attendees | ✅ | ❌ |
+
+### Host Permissions
+The Host (Meeting Organizer) has full administrative control:
+*   Schedule, Edit, and Delete meetings.
+*   Generate or manually attach Google Meet links.
+*   Invite/Remove participants.
+*   Access and edit AI insights.
+*   Initiate the "Join" link for the session.
+
+### Participant Permissions
+Participants have read-only access to meeting metadata:
+*   View meeting details and notes.
+*   View the participant list.
+*   Join live meetings (via external redirect).
 
 > [!IMPORTANT]
-> Administrative buttons (Edit/Delete) MUST be hidden from the UI for participants to prevent unauthorized modifications.
+> Administrative controls (Edit/Delete) must be strictly hidden from Participants in the UI.
 
 ---
 
 ## 4. User Stories
-*   **As a user**, I want to view my upcoming meetings in a calendar so I can manage my professional schedule effectively.
-*   **As a host**, I want to edit meeting details so I can update the time or participants when requirements change.
-*   **As a participant**, I want to join a live meeting with a single click so I can attend discussions without searching for links.
-*   **As a user**, I want to filter meetings by "Client" or "Internal" types so I can quickly find relevant sessions.
-*   **As a host**, I want AI-generated meeting insights so I can quickly review outcomes without re-watching recordings.
+*   **As a user**, I want to view my upcoming meetings in a calendar so I can manage my professional schedule.
+*   **As a host**, I want to edit meeting details so I can update the time or participants when plans change.
+*   **As a participant**, I want to join a live meeting with one click so I can attend discussions via Google Meet.
+*   **As a user**, I want to filter meetings so I can quickly identify upcoming client sessions.
+*   **As a host**, I want AI-generated meeting insights so I can review outcomes without watching recordings.
 
 ---
 
 ## 5. Primary User Flows
 
-### A. Dashboard Navigation
+### A. Meetings Dashboard Flow
 1.  User opens **Meetings** tab.
-2.  System renders **Upcoming Meetings** (left) and **Weekly Calendar** (right).
-3.  User clicks a meeting card or calendar block.
-4.  System navigates to **Meeting Details** view.
+2.  System renders list of upcoming meetings and the default Week calendar.
+3.  User selects a meeting → System navigates to **Meeting Details**.
 
-### B. Joining a Meeting
-1.  User identifies a meeting with `status == "LIVE"`.
-2.  User clicks **Join Now** / **Join Meeting**.
-3.  System initializes **Meeting Room** overlay.
-4.  User interacts via video/audio/chat.
-5.  User clicks **Leave Meeting** → System redirects to **Meeting Summary**.
+### B. Meeting Join Flow
+1.  User identifies a meeting with `status = "Live"`.
+2.  User clicks **Join Google Meet**.
+3.  System opens the `meetLink` in a **new browser tab**. 
+    *Note: No internal video interface is loaded within Orbit.*
 
-### C. Scheduling Flow
-1.  User clicks **Schedule Meeting** (or drags on calendar).
-2.  User completes modal fields (Title, Date, Time, Attendees).
-3.  User clicks **Schedule**.
-4.  System persists data and updates the Dashboard/Calendar views.
+### C. Meeting Scheduling Flow
+1.  User clicks **Schedule Meeting**.
+2.  User completes the form (Title, Date, Time, Participants).
+3.  System **generates a unique Google Meet link** (if not provided).
+4.  Meeting appears in calendar and upcoming list.
 
 ---
 
 ## 6. Calendar View Specifications
-
-### Day View
-*   **Layout:** Hourly horizontal timeline (8:00 AM - 4:00 PM simulation).
-*   **Behavior:** Focuses on a single selected date.
-*   **Rendering:** Meetings appear as vertical blocks spanning the allocated time slots.
-
-### Week View (Default)
-*   **Layout:** 7-day grid (Monday to Sunday).
-*   **Indicators:** Includes a "Current Time Line" with a timestamp (e.g., 10:30 AM).
-*   **Interactions:** Supports drag-selection to trigger the schedule modal.
-
-### Month View
-*   **Layout:** 5-week monthly grid.
-*   **Rendering:** Meetings shown as compact text entries within date cells.
+*   **Day View**: Hourly timeline highlighting time-block availability for a single day.
+*   **Week View (Default)**: 7-day grid showing time slots from Monday to Sunday.
+*   **Month View**: High-level grid showing meeting entries as compact calendar events.
+*   **Toggle Logic**: Users can switch between these views seamlessly via the header controls.
 
 ---
 
 ## 7. Meeting Filters
-Filters must update **both** the sidebar list and the calendar grid in real-time.
-
-**Filter Categories:**
-*   **Status:** Live, Scheduled, Completed.
-*   **Participation:** Meetings I host, Meetings I joined.
-*   **Meeting Type:** Internal, Client.
-*   **Date Range:** Today, This Week.
+Filters must update both the **Upcoming List (Sidebar)** and the **Calendar Grid** dynamically.
+*   **Status**: Live, Scheduled, Completed.
+*   **Participation**: Meetings I host, Meetings I joined.
+*   **Date Range**: Today, This Week, This Month.
 
 ---
 
 ## 8. Meeting Details Page
-*   **Header:** Dynamic breadcrumb, dynamic status badge, and title.
-*   **Permissions:** Edit/Delete icons visible **only** to the host.
-*   **Smart Action Button:**
-    *   `Live` → Blue **Join Meeting** button.
-    *   `Scheduled` → Grayed **Starts in 10 minutes** label.
-    *   `Completed` → Disabled **Meeting Ended** button.
-*   **Content Sections:** AI Insights (Summary/Action Items), Participants list, and Meeting Notes.
+This page acts as the source of truth for a session. It must include:
+*   **Header**: Title, dynamic breadcrumb, and Status Badge.
+*   **Join Button**: Primary action button that redirects to Google Meet.
+*   **Meeting Access Card**: Displays the raw Google Meet Link with a "Copy Link" utility.
+*   **Content**: Participant list, Meeting Notes, and AI Insights (Summary/Action Items).
 
 ---
 
-## 9. Meeting Room Interface
-*   **Top Bar:** Meeting name, active timer (MM:SS), and "Leave Meeting" button.
-*   **Video Grid:** Responsive layout supporting multiple video placeholders with name labels.
-*   **Control Center:**
-    *   Mic Toggle (with Mic-Off state).
-    *   Camera Toggle (with Video-Off state).
-    *   Screen Share, Chat, and Participant list toggles.
-*   **Productivity Sidebar:** Live Transcript feed and AI Meeting Notes tabs.
+## 9. Meeting Access Implementation
+Orbit handles the redirection logic via external links.
+*   **Internal Link Storage**: `meeting.meetLink` (e.g., `https://meet.google.com/xxx-xxxx-xxx`).
+*   **Join Action**: Triggers `window.open(meeting.meetLink, '_blank')`.
+*   **Status Context**:
+    *   `Live` → Blue **Join Google Meet** button.
+    *   `Scheduled` → Grayed out status label (e.g., "Starts at 10:00 AM").
+    *   `Completed` → Disabled **Meeting Ended** button.
 
 ---
 
 ## 10. Acceptance Criteria
-*   [ ] Dashboard accurately renders `MOCK_MEETINGS` in both list and calendar formats.
-*   [ ] Calendar toggle successfully switches between Day, Week, and Month layouts.
-*   [ ] "Join Meeting" button is only interactive when `status === 'LIVE'`.
-*   [ ] Host-specific buttons are hidden from users where `currentUser.id !== meeting.hostId`.
-*   [ ] All filters correctly reduce the visible set of meetings in both list and grid views.
-*   [ ] Meeting Room initializes a timer that increments every second.
-*   [ ] Summary screen accurately displays AI-generated bullet points and action items.
+*   [ ] Dashboard renders meetings in both list and grid formats.
+*   [ ] Calendar toggle successfully switches between Day, Week, and Month views.
+*   [ ] Clicking "Join Google Meet" successfully opens the correct URL in a new tab.
+*   [ ] Scheduling a meeting automatically simulates Meet link generation.
+*   [ ] Only Host ID matching `currentUser.id` can see Edit/Delete buttons.
+*   [ ] Filters correctly reduce the visible set of meetings on both UI sections.
+*   [ ] Meeting Details page correctly shows the Meet URL in the "Access" card.
 
 ---
 
 ## 11. Non-Functional Requirements
-*   **Aesthetics:** Adhere to Orbit Primary (`#005FFF`), Background (`#F8F9FA`), and Card Radius (`12px`).
-*   **Performance:** UI updates must feel instantaneous (reactive state management).
-*   **Accessibility:** Use Inter font and high-contrast text for critical status badges.
-*   **Modularity:** Video room and Summary views should be isolated components.
+*   **Responsive UI**: Optimized for desktop views with fluid grid systems.
+*   **Real-time Logic**: Filtering and view switching must be instantaneous.
+*   **Security**: Role-based UI masking for administrative actions.
+*   **Aesthetics**: Adhere to Orbit's `#005FFF` primary branding and Inter typography.
 
 ---
 
 ## 12. Future Enhancements
-*   **Cloud Recording:** Integrated playback directly in the summary screen.
-*   **Global Search:** Search specifically within meeting transcripts.
-*   **External Sync:** Two-way integration with Google Calendar and Outlook.
-*   **AI Action Automation:** Automatically creating ORBIT tasks from meeting action items.
+*   **Calendar API Sync**: Two-way sync with Google Calendar or Outlook.
+*   **Recording Search**: Integration with meeting recording storage for searchability.
+*   **Automatic Tasks**: Creating ORBIT tasks from AI-generated action items.

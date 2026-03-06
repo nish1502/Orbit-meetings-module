@@ -48,11 +48,7 @@ const MOCK_MEETINGS = [
         { text: 'Client feedback deck', completed: false },
       ]
     },
-    access: {
-      link: 'https://orbit.app/m/q4-align-2023',
-      id: '829 110 442',
-      passcode: '992301'
-    }
+    meetLink: 'https://meet.google.com/prj-strat-align'
   },
   {
     id: 2,
@@ -72,7 +68,7 @@ const MOCK_MEETINGS = [
     ],
     notes: ['Analyze last week performance', 'Plan next launch campaign'],
     insights: { summary: 'Standard review.', actionItems: [] },
-    access: { link: '...', id: '...', passcode: '...' }
+    meetLink: 'https://meet.google.com/mkt-weekly'
   },
   {
     id: 3,
@@ -91,7 +87,7 @@ const MOCK_MEETINGS = [
     ],
     notes: ['Welcome kit walk through'],
     insights: { summary: 'Onboarding process.', actionItems: [] },
-    access: { link: '...', id: '...', passcode: '...' }
+    meetLink: 'https://meet.google.com/hire-onboard'
   },
   {
     id: 4,
@@ -110,7 +106,7 @@ const MOCK_MEETINGS = [
     ],
     notes: ['Review quarterly pipeline'],
     insights: { summary: 'Sales sync.', actionItems: [] },
-    access: { link: '...', id: '...', passcode: '...' }
+    meetLink: 'https://meet.google.com/sales-pipe-sync'
   }
 ];
 
@@ -121,12 +117,12 @@ let state = {
   calendarView: 'week',
   isModalOpen: false,
   isFilterOpen: false,
-  isMeetingActive: false,
-  micActive: true,
-  cameraActive: true,
-  meetingTimer: 0,
   dragSelection: null, // { day, startSlot, endSlot }
 }
+
+const generateMeetLink = () => {
+  return "https://meet.google.com/" + Math.random().toString(36).substring(2, 5) + "-" + Math.random().toString(36).substring(2, 6) + "-" + Math.random().toString(36).substring(2, 5);
+};
 
 const calculateDuration = (start, end) => {
   const [sH, sM] = start.split(':').map(Number);
@@ -189,7 +185,7 @@ const renderDashboard = () => {
                     ${meeting.participants.length > 3 ? `<span class="more-count" title="${meeting.participants.slice(3).map(p => p.name).join(', ')}">+${meeting.participants.length - 3}</span>` : ''}
                   </div>
                 </div>
-                ${meeting.status === 'LIVE' ? `<button class="join-now-btn" onclick="event.stopPropagation(); window.renderMeetingRoom(${meeting.id})">Join Now</button>` : ''}
+                ${meeting.status === 'LIVE' ? `<button class="join-now-btn" onclick="event.stopPropagation(); window.open('${meeting.meetLink}', '_blank')">Join Google Meet</button>` : ''}
               </div>
             </div>
           `).join('')}
@@ -324,8 +320,11 @@ const renderDashboard = () => {
                                style="top: ${startMinutes}px; height: ${duration}px;" 
                                data-id="${m.id}">
                             <div class="block-title">${m.title}</div>
-                            <div class="block-avatars">
-                              ${m.participants.slice(0, 2).map(p => `<img src="${p.img}" style="width: 20px; height: 20px; border-radius: 50%; border: 1px solid white; margin-right: -4px;">`).join('')}
+                            <div class="block-avatars" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                              <div style="display: flex;">
+                                ${m.participants.slice(0, 2).map(p => `<img src="${p.img}" style="width: 20px; height: 20px; border-radius: 50%; border: 1px solid white; margin-right: -4px;">`).join('')}
+                              </div>
+                              <i data-lucide="video" style="width: 12px; height: 12px; opacity: 0.8;"></i>
                             </div>
                           </div>
                         `;
@@ -478,8 +477,8 @@ const renderDetails = (id) => {
       <header class="details-header">
         <div class="details-top-row">
           <div class="details-title">
-             ${meeting.status === 'LIVE' ? '<span class="status-badge status-live">Live Now</span>' : ''}
-             ${meeting.status === 'Scheduled' ? '<span class="status-badge status-scheduled">Scheduled</span>' : ''}
+             ${meeting.status === 'LIVE' ? '<span class="status-badge status-live"><i data-lucide="video" style="width: 10px; margin-right: 4px;"></i> Live Now</span>' : ''}
+             ${meeting.status === 'Scheduled' ? `<span class="status-badge status-scheduled">Starts at ${meeting.startTime}</span>` : ''}
              ${meeting.status === 'Completed' ? '<span class="status-badge" style="background: #fee2e2; color: #ef4444;">Ended</span>' : ''}
              <h1>${meeting.title}</h1>
           </div>
@@ -491,13 +490,13 @@ const renderDetails = (id) => {
             
             ${meeting.status === 'LIVE' ? `
               <button class="btn btn-primary" id="join-meeting-details-btn" style="display: flex; align-items: center; gap: 8px;">
-                Join Meeting
+                <i data-lucide="video" style="width: 18px;"></i> Join Google Meet
               </button>
             ` : ''}
 
             ${meeting.status === 'Scheduled' ? `
               <button class="btn btn-secondary" style="background-color: #f1f5f9; cursor: default; border: none; color: var(--text-secondary);">
-                Starts in 10 minutes
+                Starts at ${meeting.startTime}
               </button>
             ` : ''}
 
@@ -584,25 +583,24 @@ const renderDetails = (id) => {
               </div>
            </div>
 
-           <!-- Meeting Access -->
-           <div class="details-card">
-              <div class="card-header">
-                <h3>Meeting Access</h3>
-              </div>
-              <div class="access-details">
-                <div class="access-row">
-                   <span style="color: var(--text-secondary); line-height: 2;">${meeting.access.link}</span>
-                   <button class="copy-btn"><i data-lucide="copy" style="width: 14px;"></i></button>
-                </div>
-                <div style="display: flex; gap: 24px; margin: 8px 0;">
-                   <div><div style="font-size: 10px; color: var(--text-secondary);">Meeting ID:</div><div style="font-weight: 600;">${meeting.access.id}</div></div>
-                   <div><div style="font-size: 10px; color: var(--text-secondary);">Passcode:</div><div style="font-weight: 600;">${meeting.access.passcode}</div></div>
-                </div>
-                <button class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;">
-                   <i data-lucide="share" style="width: 14px;"></i> Invite via Email
-                </button>
-              </div>
-           </div>
+            <!-- Meeting Access -->
+            <div class="details-card">
+               <div class="card-header">
+                 <h3>Meeting Access</h3>
+               </div>
+               <div class="access-details">
+                 <div class="access-row" style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 12px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Google Meet Link</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                      <span style="color: var(--primary); font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${meeting.meetLink}</span>
+                      <button class="copy-btn" style="background: none; border: none; cursor: pointer; color: var(--text-secondary);"><i data-lucide="copy" style="width: 14px;"></i></button>
+                    </div>
+                 </div>
+                 <button class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="window.open('${meeting.meetLink}', '_blank')">
+                    <i data-lucide="external-link" style="width: 14px;"></i> Open in Google Meet
+                 </button>
+               </div>
+            </div>
 
            <!-- Smart Recording Card (Premium feel) -->
            <div class="details-card" style="background: linear-gradient(135deg, #005FFF, #4A90E2); color: white; border: none;">
@@ -620,7 +618,7 @@ const renderDetails = (id) => {
   `;
 
   const joinBtn = document.getElementById('join-meeting-details-btn');
-  if (joinBtn) joinBtn.addEventListener('click', () => renderMeetingRoom(id));
+  if (joinBtn) joinBtn.addEventListener('click', () => window.open(meeting.meetLink, '_blank'));
 
   document.getElementById('breadcrumb-meetings').addEventListener('click', navigateToDashboard);
   lucide.createIcons();
@@ -730,6 +728,33 @@ const renderModal = () => {
 
   document.getElementById('close-modal-btn').addEventListener('click', closeModal);
   document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
+
+  modalOverlay.querySelector('.btn-primary').addEventListener('click', () => {
+    const title = modalOverlay.querySelector('.form-input').value || 'New Sync Event';
+    const newMeeting = {
+      id: MOCK_MEETINGS.length + 1,
+      title: title,
+      hostId: currentUser.id,
+      time: '02:00 PM – 03:00 PM',
+      startTime: '14:00',
+      endTime: '15:00',
+      day: 1,
+      date: 'Oct 24, 2023',
+      status: 'Scheduled',
+      type: 'Internal',
+      organizer: currentUser.name,
+      participants: [
+        { name: currentUser.name, role: 'Organizer', img: currentUser.img }
+      ],
+      notes: [],
+      insights: { summary: '', actionItems: [] },
+      meetLink: generateMeetLink()
+    };
+    MOCK_MEETINGS.push(newMeeting);
+    closeModal();
+    renderDashboard();
+  });
+
   lucide.createIcons();
 }
 
@@ -784,164 +809,14 @@ const hidePreview = () => {
   hoverPreview.classList.add('hidden');
 };
 
-// --- Meeting Room & Summary ---
+// --- Initialization ---
 
-let timerInterval;
+navigateToDashboard();
 
-const startTimer = () => {
-  state.meetingTimer = 0;
-  timerInterval = setInterval(() => {
-    state.meetingTimer++;
-    const timerEl = document.getElementById('meeting-timer');
-    if (timerEl) {
-      const mins = Math.floor(state.meetingTimer / 60).toString().padStart(2, '0');
-      const secs = (state.meetingTimer % 60).toString().padStart(2, '0');
-      timerEl.innerText = `${mins}:${secs}`;
-    }
-  }, 1000);
-}
-
-const renderMeetingRoom = (id) => {
-  const meeting = MOCK_MEETINGS.find(m => m.id == id);
-  const room = document.createElement('div');
-  room.id = 'meeting-room-overlay';
-  room.className = 'meeting-room';
-
-  room.innerHTML = `
-    <header class="meeting-header">
-      <div class="meeting-room-title">
-        <i data-lucide="video" style="color: #10b981;"></i>
-        <span>${meeting.title}</span>
-        <div class="timer" id="meeting-timer">00:00</div>
-      </div>
-      <button class="control-btn danger" id="leave-meeting">Leave Meeting</button>
-    </header>
-    
-    <div class="meeting-body">
-      <div class="video-section">
-        <div class="video-placeholder">
-          <img src="${currentUser.img || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Elena'}" alt="Me">
-          <div class="video-label">Elena Rodriguez (You)</div>
-        </div>
-        ${meeting.participants.map(p => `
-          <div class="video-placeholder">
-            <img src="${p.img}" alt="${p.name}">
-            <div class="video-label">${p.name}</div>
-          </div>
-        `).join('')}
-      </div>
-      
-      <aside class="meeting-sidebar">
-        <div class="sidebar-tabs">
-          <div class="sidebar-tab active">Transcript</div>
-          <div class="sidebar-tab">AI Notes</div>
-        </div>
-        <div class="sidebar-content">
-          <div class="transcript-entry">
-            <div class="transcript-name">Marcus Thorne</div>
-            <div class="transcript-text">I've completed the initial draft for the SSO specifications. We should be able to start the implementation phase next week.</div>
-          </div>
-          <div class="transcript-entry">
-            <div class="transcript-name">Elena Rodriguez</div>
-            <div class="transcript-text">That's great progress. David, how is the design coming along for the new onboarding flow?</div>
-          </div>
-        </div>
-      </aside>
-    </div>
-    
-    <footer class="meeting-controls">
-      <button class="control-btn ${state.micActive ? 'active' : ''}" id="toggle-mic">
-        <i data-lucide="${state.micActive ? 'mic' : 'mic-off'}"></i>
-      </button>
-      <button class="control-btn ${state.cameraActive ? 'active' : ''}" id="toggle-cam">
-        <i data-lucide="${state.cameraActive ? 'video' : 'video-off'}"></i>
-      </button>
-      <button class="control-btn"><i data-lucide="monitor"></i></button>
-      <button class="control-btn"><i data-lucide="message-square"></i></button>
-      <button class="control-btn"><i data-lucide="users"></i></button>
-    </footer>
-  `;
-
-  document.body.appendChild(room);
-  lucide.createIcons();
-  startTimer();
-
-  document.getElementById('leave-meeting').addEventListener('click', () => {
-    clearInterval(timerInterval);
-    document.body.removeChild(room);
-    renderSummary(id);
-  });
-
-  document.getElementById('toggle-mic').addEventListener('click', (e) => {
-    state.micActive = !state.micActive;
-    renderMeetingRoom(id); // Re-render or just toggle class
-    document.body.removeChild(room);
-    renderMeetingRoom(id);
-  });
-}
-
-const renderSummary = (id) => {
-  const meeting = MOCK_MEETINGS.find(m => m.id == id);
-  state.currentView = 'summary';
-  document.getElementById('page-title').innerText = 'Meeting Summary';
-
-  contentArea.innerHTML = `
-    <div class="summary-screen">
-      <div class="summary-header">
-        <i data-lucide="check-circle-2" style="width: 48px; height: 48px; color: #10b981;"></i>
-        <h1>Meeting Summary</h1>
-        <p style="color: var(--text-secondary);">${meeting.title} • ${meeting.date}</p>
-      </div>
-      
-      <div class="summary-grid">
-        <div class="col-main">
-          <div class="summary-card">
-            <h3><i data-lucide="sparkles" style="width: 18px; margin-right: 8px; vertical-align: middle; color: var(--primary);"></i> AI Executive Summary</h3>
-            <p style="margin-top: 16px; line-height: 1.6; color: var(--text-secondary);">${meeting.insights.summary}</p>
-          </div>
-          
-          <div class="summary-card">
-            <h3><i data-lucide="file-text" style="width: 18px; margin-right: 8px; vertical-align: middle;"></i> Full Transcript</h3>
-            <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 16px;">
-              <div class="transcript-entry">
-                <span style="font-weight: 700; font-size: 13px;">Marcus Thorne (10:05 AM)</span>
-                <p style="font-size: 14px; margin-top: 4px; color: var(--text-secondary);">The SSO specs are ready for review. I've focused on SAML and OIDC support for Enterprise clients.</p>
-              </div>
-              <div class="transcript-entry">
-                <span style="font-weight: 700; font-size: 13px;">David Chen (10:12 AM)</span>
-                <p style="font-size: 14px; margin-top: 4px; color: var(--text-secondary);">Designing the flow to be zero-touch as much as possible.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col-sidebar">
-          <div class="summary-card">
-            <h3>Action Items</h3>
-            <ul style="margin-top: 16px; list-style: none; padding: 0;">
-              ${meeting.insights.actionItems.map(item => `
-                <li style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 14px;">
-                  <i data-lucide="${item.completed ? 'check-circle' : 'circle'}" style="width: 16px; color: ${item.completed ? '#10b981' : '#cbd5e1'};"></i>
-                  ${item.text}
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-          
-          <button class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <i data-lucide="download" style="width: 16px;"></i> Download Notes
-          </button>
-          <button class="btn btn-secondary" style="width: 100%; margin-top: 12px;" id="back-to-dashboard-summary">Back to Dashboard</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.getElementById('back-to-dashboard-summary').addEventListener('click', navigateToDashboard);
-  lucide.createIcons();
-}
-
-window.renderMeetingRoom = renderMeetingRoom;
+// Click outside modal to close
+modalOverlay.addEventListener('click', (e) => {
+  if (e.target === modalOverlay) closeModal();
+});
 
 // --- Initialization ---
 
